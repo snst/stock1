@@ -21,6 +21,15 @@ class Scaler:
         self.scale_factor_dict[name] = factor
         pass
 
+    def scale_all(self):
+        self.scale_same(["Open", "Close", "High", "Low", "SMA20", "SMA50"])#, "SMA100", "SMA200"])
+        self.scale_same(["Volume"])
+        self.scale_same(["EMA"])
+        self.scale_same(["ATR"])
+        self.scale_same(["MACD", "MACD_Signal"])
+        self.scale_same(["MACD_Diff"])
+        self.scale_factor("RSI", 0.01)        
+
     def resolve_names(self, column_dict):
         for name, factor in self.scale_factor_dict.items():
             self.scale_factor_index_dict[column_dict.get(name, None)] = factor
@@ -47,10 +56,12 @@ class Scaler:
             minmax_values = []
             for col in columns:
                 column_data = sequence[:, col]
-                filtered_column_data = column_data[~np.isnan(column_data)]
-                if len(filtered_column_data) > 0:
-                    minmax_values.append(np.min(filtered_column_data))
-                    minmax_values.append(np.max(filtered_column_data))
+                minmax_values.append(column_data.min())
+                minmax_values.append(column_data.max())
+                #filtered_column_data = column_data[~np.isnan(column_data)]
+                #if len(filtered_column_data) > 0:
+                #    minmax_values.append(np.min(filtered_column_data))
+                #    minmax_values.append(np.max(filtered_column_data))
                 #minmax_values.append(np.nanmin(sequence[:, col]))
                 #minmax_values.append(np.nanmax(sequence[:, col]))
             if len(minmax_values) > 0:

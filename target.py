@@ -8,6 +8,8 @@ class Target:
     def add_target(self, df, source='Close', distance=5, target_percent=2):
         values = df[source].values
         target = np.zeros(len(values))
+        n_buy_signal = 0
+        n_nobuy_signal = 0
 
         for i in range(len(values)-distance-1):
             percent = (100.0 / values[i]
@@ -15,7 +17,13 @@ class Target:
             buy = percent >= target_percent
             # buy = values[i] < values[i+distance]
             target[i] = 1 if buy else 0
-
+            if buy:
+                n_buy_signal += 1 
+            else:
+                n_nobuy_signal += 1
+        
+        print(f'n_buy_signal: {n_buy_signal}, n_nobuy_signal: {n_nobuy_signal}')
+            
         df['Target'] = target
 #        df = df.head(len(df) - distance)
         df.drop(df.index[-distance:], inplace=True)
