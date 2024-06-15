@@ -63,13 +63,16 @@ class Predictor:
     def model7(self):
         self.name = 'model7'
         self.model = Sequential()
-        self.model.add(keras.layers.Conv1D(filters=128, kernel_size=7, activation='relu', input_shape=self.input_shape))
-        self.model.add(keras.layers.MaxPooling1D(pool_size=3))
-        self.model.add(keras.layers.LSTM(60, return_sequences=True))
-        self.model.add(keras.layers.LSTM(20))
+        self.model.add(keras.layers.Conv1D(filters=64, kernel_size=3, activation='relu', input_shape=self.input_shape))
+        self.model.add(Dropout(0.2))
+        #self.model.add(keras.layers.MaxPooling1D(pool_size=3))
+        self.model.add(keras.layers.LSTM(50, return_sequences=True))
+        self.model.add(keras.layers.LSTM(50))
         #self.model.add(keras.layers.Dense(1, activation='sigmoid'))
-        #self.model.compile(optimizer='adam', loss='binary_crossentropy', metrics=['accuracy'])        
-        self.model.add(keras.layers.Dense(3, activation='sigmoid'))
+        #self.model.compile(optimizer='adam', loss='binary_crossentropy', metrics=['accuracy'])
+        self.model.add(Dense(50, activation='relu'))  
+        self.model.add(keras.layers.Dense(3, activation='softmax'))
+#        self.model.add(keras.layers.Dense(3, activation='sigmoid'))
         self.model.compile(optimizer='adam', loss='categorical_crossentropy', metrics=['accuracy'])        
         self.model.summary()
 

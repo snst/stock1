@@ -17,12 +17,12 @@ def set_seed(seed):
     np.random.seed(seed)
     tf.random.set_seed(seed)
 
-set_seed(112)
+#set_seed(112)
 
 
-epochs = 300
-test_size = 0.05
-sequence_length = 10
+epochs = 1000
+test_size = 0.2
+sequence_length = 20
 reload = False
 train = False
 plot = Plotter()
@@ -35,7 +35,7 @@ sequencer = Sequencer(sequence_length)
 stock_name = '^NDX'
 #stock_name = 'WAC.DE'
 #stock_name = 'VZ'
-start_date = '2010-01-01'
+start_date = '2017-01-01'
 end_date = None # '2023-06-01'
 #reload = True
 train = True
@@ -44,10 +44,11 @@ s = Stock()
 s.load(stock_name, start_date=start_date, end_date=end_date, reload=reload)
 s.preprocess()
 features = Features(s.df)
-features.add_bollinger()
-features.add_rsi()
+#features.add_bollinger()
+#features.add_rsi()
+#features.add_dummy()
 features.save_columns()
-s.add_target()
+s.add_target2()
 s.drop_nan()
 #s.apply_pivot(dist=5)
 #s.apply_pointpos()
@@ -55,12 +56,14 @@ s.drop_nan()
 #print(s.df[100:150])
 #plot.show_support(s.df, bin_width=10)
 
-plot.show(s.df, features=['Close', 'RSI', 'BM', 'BU', 'BL'], marker='Target', block=True)
+#plot.show(s.df, features=['Close', 'RSI', 'BM', 'BU', 'BL'], marker='Target', block=True)
+plot.show(s.df, features=['Close', 'A', 'B'], marker='Target', block=True)
 
 
 scaler = Scaler()
-scaler.scale_same(["Open", "Close", "High", "Low", 'BM', 'BU', 'BL'])
-scaler.scale_factor('RSI', 0.01)
+scaler.scale_same(['Close', 'A', 'B'])
+#scaler.scale_same(["Open", "Close", "High", "Low", 'BM', 'BU', 'BL'])
+#scaler.scale_factor('RSI', 0.01)
 
 scaler.resolve_names(features.column_dict)
 sequencer.add(s.df)

@@ -35,6 +35,9 @@ class Stock:
     def preprocess(self):
         self.drop_column('Adj Close')
         self.drop_column('Volume')
+        self.drop_column('High')
+        self.drop_column('Low')
+        self.drop_column('Open')
         #self.df.reset_index(drop=True, inplace=True)
         self.df.isna().sum()
 
@@ -62,7 +65,20 @@ class Stock:
         self.df['Target'] = target
         pass
 
-
+    def add_target2(self, distance=1, percent=1):
+        BUY = 1
+        SELL = 2
+        l = len(self.df)
+        target = np.zeros(l)
+        for i in range(0, l-distance):
+            I = self.df.Close.iloc[i]
+            K = self.df.Close.iloc[i+1]
+            if p(I, K) > percent:
+                target[i] = BUY
+            elif p(I, K) < -percent:
+                target[i] = SELL
+        self.df['Target'] = target
+        pass
 
     def pivotid(self, df1, time_index, n1, n2): #n1 n2 before and after candle l
         #https://colab.research.google.com/drive/1ATNIwG-gYUHs3BfHrsyfeS7ctTxBGW1t#scrollTo=964219a4

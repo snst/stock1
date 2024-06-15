@@ -3,6 +3,8 @@ from ta.trend import MACD, SMAIndicator
 import pandas as pd
 import pandas_ta as ta
 import ta
+import random
+import numpy as np
 
 
 class Features:
@@ -16,6 +18,21 @@ class Features:
 
     def add_atr(self):
         self.df['ATR'] = ta.atr(self.df.High, self.df.Low, self.df.Close, length=7)
+
+    def add_dummy(self):
+        l = len(self.df)
+        a = np.zeros(l)
+        b = np.zeros(l)
+        for i in range(0, l-1):
+            r = random.uniform(0.3, 0.5 )
+            v = self.df.Close.iloc[i+1]
+            a[i] = v * r
+            b[i] = v * (1-r)
+        self.df['A'] = a
+        self.df['B'] = b
+        pass
+
+
 
     def add_rsi(self, source='Close'):
         rsi_indicator = ta.momentum.RSIIndicator(self.df[source], window=14)

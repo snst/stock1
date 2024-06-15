@@ -32,13 +32,16 @@ class Scaler:
 
     def resolve_names(self, column_dict):
         for name, factor in self.scale_factor_dict.items():
-            self.scale_factor_index_dict[column_dict.get(name, None)] = factor
+            col_index = column_dict.get(name, None)
+            if col_index is not None:
+                self.scale_factor_index_dict[col_index] = factor
 
         for scale_names in self.scale_same_name_list:
             columns = []
             for name in scale_names:
-                col = column_dict.get(name, None)
-                columns.append(col)
+                col_index = column_dict.get(name, None)
+                if col_index is not None:
+                    columns.append(col_index)
             self.scale_same_index_list.append(columns)
 
 
