@@ -1,0 +1,4 @@
+model*
+*.pyc
+my_dir/*
+data/*

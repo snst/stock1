@@ -9,6 +9,7 @@ class Sequencer:
     def __init__(self, len):
         self.X = None
         self.y = None
+        self.y_cat = None
         self.d = None
         self.sequence_len = len
         pass
@@ -32,6 +33,7 @@ class Sequencer:
             self.X = np.concatenate((self.X, X), axis=0)
             self.y = np.concatenate((self.y, y), axis=0)
             self.d = np.concatenate((self.d, d), axis=0)
+        self.y_cat = to_categorical(self.y, num_classes=3)
         pass
 
     def split_train_test(self, test_size=0.2, shuffle=False):

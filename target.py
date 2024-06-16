@@ -1,50 +1,93 @@
 import numpy as np
+import myutils
 
 
 class Target:
-    def __init__(self):
+    def __init__(self, data):
+        self.data = data
         pass
 
-    def add_target(self, df, source='Close', distance=5, target_percent=2):
-        values = df[source].values
-        target = np.zeros(len(values))
-        n_buy_signal = 0
-        n_nobuy_signal = 0
-
-        for i in range(len(values)-distance-1):
-            percent = (100.0 / values[i]
-                       * values[i+distance]) - 100.0
-            buy = percent >= target_percent
-            # buy = values[i] < values[i+distance]
-            target[i] = 1 if buy else 0
-            if buy:
-                n_buy_signal += 1 
-            else:
-                n_nobuy_signal += 1
-        
-        print(f'n_buy_signal: {n_buy_signal}, n_nobuy_signal: {n_nobuy_signal}')
-            
+    def add_target(self, distance=5, percent=1):
+        df = self.data.df
+        BUY = 1
+        SELL = 2
+        l = len(df)
+        target = np.zeros(l)
+        for i in range(0, l-distance):
+            I = df.Close.iloc[i]
+            for k in range(0, distance):
+                K = df.Close.iloc[i+k]
+                if myutils.percent(I, K) < -0.1:
+                    break
+                if myutils.percent(I, K) > percent:
+                    target[i] = BUY
+                    break
+            for k in range(0, distance):
+                K = df.Close.iloc[i+k]
+                if myutils.percent(I, K) < -percent:
+                    target[i] = SELL
+                    break
         df['Target'] = target
-#        df = df.head(len(df) - distance)
-        df.drop(df.index[-distance:], inplace=True)
+        self.data.df = df
         pass
 
+    def add_target2(self, distance=1, percent=1):
+        df = self.data.df
+        BUY = 1
+        SELL = 2
+        l = len(df)
+        target = np.zeros(l)
+        for i in range(0, l-distance):
+            I = df.Close.iloc[i]
+            K = df.Close.iloc[i+1]
+            if myutils.percent(I, K) > percent:
+                target[i] = BUY
+            elif myutils.percent(I, K) < -percent:
+                target[i] = SELL
+        df['Target'] = target
+        self.data.df = df
+        pass
 
-
-"""
-    def add_target_avg(self, source='Close'):
-        F = 1
-        P = 3
-        source_feature = self.data[source].values
-        target = np.zeros(len(source_feature))
-
-        for i in range(len(source_feature)-F-P-1):
-            sum = 0
-            for k in range(i+F, i+F+P):
-                sum += source_feature[k]
-            avg = sum/P
-            target[i] = 1 if avg > source_feature[i] else 0
-
-        self.data['Target'] = target
-        # df = df_target.iloc[:-(F+P)]
-"""
+    def pivotid(self, df1, time_index, n1, n2): #n1 n2 before and after candle l
+        #https://colab.research.google.com/drive/1ATNIwG-gYUHs3BfHrsyfeS7ctTxBGW1t#scrollTo=964219a4
+        #https://www.youtube.com/watch?v=MkecdbFPmFY
+        l = df1.index.get_loc(time_index)
+        if l-n1 < 0 or l+n2 >= len(df1):
+            return 0
+        
+        pividlow=1
+        pividhigh=1
+        first_i = l-n1
+        last_i = l+n2
+        for i in range(l-n1, l+n2+1):
+#            if(df1.Low.iloc[l]>df1.Low.iloc[i]):
+            if(df1.Close.iloc[l]>df1.Close.iloc[i]):
+                pividlow=0
+#            if(df1.High.iloc[l]<df1.High.iloc[i]):
+            if(df1.Close.iloc[l]<df1.Close.iloc[i]):
+                pividhigh=0
+            """
+            if i == first_i and pividlow:
+                percent = (100 / df1.Close.iloc[l] * df1.Close.iloc[i]) - 100
+                if percent < 1:
+                    pividlow=0
+                pass
+            if i == last_i and pividhigh:
+                percent = (100 / df1.Close.iloc[l] * df1.Close.iloc[i]) - 100
+                if percent < -1:
+                    pividhigh=0
+                pass
+            """
+        if pividlow and pividhigh:
+            return 3
+        elif pividlow:
+            return 1
+        elif pividhigh:
+            return 2
+        else:
+            return 0
+        
+    def apply_pivot(self, dist=10):
+        df = self.data.df
+        df['Pivot'] = df.apply(lambda x: self.pivotid(df, x.name, dist, dist), axis=1)
+        self.data.df = df

@@ -60,7 +60,7 @@ class Predictor:
         self.model.compile(optimizer='adam', loss='binary_crossentropy', metrics=['accuracy'])        
         self.model.summary()
 
-    def model7(self):
+    def model7_old(self):
         self.name = 'model7'
         self.model = Sequential()
         self.model.add(keras.layers.Conv1D(filters=64, kernel_size=3, activation='relu', input_shape=self.input_shape))
@@ -75,6 +75,52 @@ class Predictor:
 #        self.model.add(keras.layers.Dense(3, activation='sigmoid'))
         self.model.compile(optimizer='adam', loss='categorical_crossentropy', metrics=['accuracy'])        
         self.model.summary()
+
+    def model7(self, hp=None):
+        self.name = 'model7'
+
+        hp_filters = 64
+        hp_kernel_size = 5
+        hp_pool_size = 3
+        hp_lstm1_units = 40
+        hp_lstm2_units = 40
+        hp_dense_units = 90
+        hp_activation1 = 'relu'
+        hp_activation2 = 'relu'
+        hp_activation3 = 'softmax'
+        hp_learning_rate = 0.001
+
+        if hp is not None:
+            pass
+            hp_filters = hp.Int('filters', min_value=32, max_value=128, step=32)
+            hp_kernel_size = hp.Choice('kernel_size', values=[3, 5, 7, 11])
+            hp_pool_size = hp.Choice('pool_size', values=[2, 3, 5])
+            hp_lstm1_units = hp.Int('lstm1_units', min_value=10, max_value=100, step=10)        
+            hp_lstm2_units = hp.Int('lstm2_units', min_value=10, max_value=100, step=10)
+            hp_dense_units = hp.Int('dense_units', min_value=10, max_value=100, step=10)
+            hp_activation1 = hp.Choice('activation1', values = ['relu', 'softmax', 'sigmoid'])
+            hp_activation2 = hp.Choice('activation2', values = ['relu', 'softmax', 'sigmoid'])
+            hp_activation3 = hp.Choice('activation3', values = ['relu', 'softmax', 'sigmoid'])
+            hp_learning_rate = hp.Choice('learning_rate', values=[1e-2, 1e-3, 1e-4])
+
+
+        self.model = Sequential()
+        self.model.add(keras.layers.Conv1D(filters=hp_filters, kernel_size=hp_kernel_size, activation=hp_activation1, input_shape=self.input_shape))
+        #self.model.add(keras.layers.Conv1D(filters=hp_filters, kernel_size=hp_kernel_size, activation='relu', input_shape=self.input_shape))
+        #self.model.add(Dropout(0.2))
+        self.model.add(keras.layers.MaxPooling1D(pool_size=hp_pool_size))
+        self.model.add(keras.layers.LSTM(hp_lstm1_units, return_sequences=True))
+        self.model.add(keras.layers.LSTM(hp_lstm2_units))
+        self.model.add(keras.layers.Dense(hp_dense_units, activation=hp_activation2))  
+        self.model.add(keras.layers.Dense(3, activation=hp_activation3))
+        #self.model.compile(optimizer='adam', loss='categorical_crossentropy', metrics=['accuracy'])
+        self.model.compile(optimizer=keras.optimizers.Adam(learning_rate=hp_learning_rate), 
+                            loss='categorical_crossentropy', metrics=['accuracy'])        
+
+        if hp is None:
+            self.model.summary()
+        return self.model
+
 
     def model7_opt(self, hp):
         self.name = 'model7'
@@ -168,7 +214,7 @@ class Predictor:
         stop_early = tf.keras.callbacks.EarlyStopping(monitor='val_loss', patience=5)
 
         # Run the hyperparameter search
-        tuner.search(self.sequencer.X, self.sequencer.y, epochs=50, validation_split=0.2, callbacks=[stop_early])
+        tuner.search(self.sequencer.X, self.sequencer.y_cat, epochs=50, validation_split=0.2, callbacks=[stop_early])
 
         # Get the optimal hyperparameters
         best_hps = tuner.get_best_hyperparameters(num_trials=1)[0]
@@ -183,7 +229,7 @@ class Predictor:
 
         # Build the model with the optimal hyperparameters and train it
         self.model = tuner.hypermodel.build(best_hps)
-        history = self.model.fit(self.sequencer.X, self.sequencer.y, epochs=50, validation_split=0.2)
+        history = self.model.fit(self.sequencer.X, self.sequencer.y_cat, epochs=50, validation_split=0.2)
         if save:
             self.save()
 
@@ -201,7 +247,7 @@ class Predictor:
         plt.plot(self.history.history['accuracy'], label='Train Accuracy')
         plt.plot(self.history.history['val_accuracy'], label='Val Accuracy')
         plt.legend()
-        plt.show(block=True)
+        plt.show(block=False)
         if save:
             self.save()
 
